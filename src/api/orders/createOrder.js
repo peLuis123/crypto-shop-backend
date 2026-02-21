@@ -11,6 +11,15 @@ export const createOrder = async (req, res) => {
       return res.status(400).json({ error: 'Products are required' });
     }
 
+    const pendingOrder = await Order.findOne({ userId, status: 'pending' });
+    if (pendingOrder) {
+      return res.status(409).json({ 
+        error: 'You have a pending order. Please complete or cancel it first.',
+        code: 'PENDING_ORDER_EXISTS',
+        pendingOrderId: pendingOrder._id
+      });
+    }
+
     const user = await User.findById(userId);
     if (!user || !user.wallet.address) {
       return res.status(400).json({ error: 'User wallet not found' });
@@ -71,7 +80,6 @@ export const createOrder = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Create order error:', error);
     res.status(500).json({ error: error.message });
   }
 };

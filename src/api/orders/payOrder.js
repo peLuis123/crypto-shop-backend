@@ -1,6 +1,6 @@
 import Order from '../../models/Order.js';
 import User from '../../models/User.js';
-import { sendTRX } from '../../services/tron.service.js';
+import { sendTRX, getBalance } from '../../services/tron.service.js';
 import Transaction from '../../models/Transaction.js';
 
 export const payOrder = async (req, res) => {
@@ -27,12 +27,25 @@ export const payOrder = async (req, res) => {
       return res.status(400).json({ error: 'User wallet not found' });
     }
 
+    const balance = await getBalance(user.wallet.address);
+    
+    if (balance < Math.abs(order.total)) {
+      return res.status(400).json({ 
+        error: 'Insufficient balance',
+        code: 'INSUFFICIENT_BALANCE',
+        userBalance: balance,
+        requiredAmount: Math.abs(order.total)
+      });
+    }
+
     try {
       const tx = await sendTRX(
         user.wallet.privateKey,
         order.merchantAddress,
         Math.abs(order.total)
       );
+
+      const txHash = tx.txid || tx.txID || tx.transaction?.txID;
 
       const transaction = new Transaction({
         userId,
@@ -41,28 +54,27 @@ export const payOrder = async (req, res) => {
         amount: Math.abs(order.total),
         currency: 'TRX',
         network: 'TRC-20',
-        transactionHash: tx.txID,
+        transactionHash: txHash,
         fromAddress: order.walletAddress,
         toAddress: order.merchantAddress,
-        status: 'confirmed'
+        status: 'pending',
+        confirmations: 0
       });
 
       await transaction.save();
-
-      order.status = 'completed';
-      order.transactionHash = tx.txID;
-      order.updatedAt = Date.now();
+      order.transactionHash = txHash;
       await order.save();
 
       res.json({
         success: true,
-        message: 'Payment successful',
+        message: 'Payment sent. Waiting for blockchain confirmation.',
         order,
         transaction: {
-          hash: tx.txID,
+          hash: txHash,
           from: order.walletAddress,
           to: order.merchantAddress,
-          amount: Math.abs(order.total)
+          amount: Math.abs(order.total),
+          status: 'pending'
         }
       });
     } catch (txError) {
@@ -71,7 +83,6 @@ export const payOrder = async (req, res) => {
       throw txError;
     }
   } catch (error) {
-    console.error('Pay order error:', error);
     res.status(500).json({ error: error.message });
   }
 };
