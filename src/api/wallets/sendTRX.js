@@ -1,12 +1,11 @@
-import { sendTRX } from "../../services/tron.service.js";
+import { sendTRX as sendTRXService } from "../../services/tron.service.js";
 import User from "../../models/User.js";
 
-export const sendTRXController = async (req, res) => {
+export const sendTRX = async (req, res) => {
   try {
     const userId = req.user.id;
     const { toAddress, amount } = req.body;
 
-    // Validar entrada
     if (!toAddress || !amount) {
       return res.status(400).json({ error: "toAddress and amount are required" });
     }
@@ -15,14 +14,12 @@ export const sendTRXController = async (req, res) => {
       return res.status(400).json({ error: "Amount must be greater than 0" });
     }
 
-    // Obtener usuario con wallet
     const user = await User.findById(userId);
     if (!user || !user.wallet.privateKey) {
       return res.status(404).json({ error: "User or wallet not found" });
     }
 
-    // Enviar TRX
-    const tx = await sendTRX(user.wallet.privateKey, toAddress, amount);
+    const tx = await sendTRXService(user.wallet.privateKey, toAddress, amount);
 
     res.json({
       message: "TRX sent successfully",

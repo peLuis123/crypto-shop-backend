@@ -5,7 +5,6 @@ export const getBalanceController = async (req, res) => {
   try {
     const userId = req.user.id;
     
-    // Obtener usuario con wallet
     const user = await User.findById(userId);
     if (!user || !user.wallet.address) {
       return res.status(404).json({ error: "User or wallet not found" });
@@ -16,7 +15,7 @@ export const getBalanceController = async (req, res) => {
 
     res.json({
       address,
-      TRX: trxBalance
+      balance: trxBalance
     });
 
   } catch (error) {
