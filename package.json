@@ -25,6 +25,7 @@
     "mongoose": "^8.0.0",
     "morgan": "^1.10.0",
     "qrcode": "^1.5.4",
+    "socket.io": "^4.8.3",
     "speakeasy": "^2.0.0",
     "swagger-ui-express": "^5.0.0",
     "tronweb": "^6.2.0"

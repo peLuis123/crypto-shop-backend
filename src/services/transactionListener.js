@@ -2,6 +2,7 @@ import Transaction from '../models/Transaction.js';
 import Order from '../models/Order.js';
 import pkg from 'tronweb';
 import dotenv from 'dotenv';
+import { emitTransactionConfirmed } from '../config/socket.js';
 
 dotenv.config();
 
@@ -57,6 +58,12 @@ export const syncPendingTransactions = async () => {
               order.status = 'completed';
               order.updatedAt = Date.now();
               await order.save();
+
+              emitTransactionConfirmed(
+                transaction.userId.toString(),
+                transaction.orderId.toString(),
+                transaction.transactionHash
+              );
             }
           }
         }
