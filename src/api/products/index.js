@@ -1,16 +1,17 @@
 import express from 'express';
-import * as productController from './productController.js';
+import { getAllProducts, getProductById } from './getProducts.js';
+import { createProduct } from './createProduct.js';
+import { updateProduct } from './updateProduct.js';
+import { deleteProduct } from './deleteProduct.js';
 import { auth, adminOnly } from '../../middlewares/auth.js';
 
 const router = express.Router();
 
-// Públicas (todos pueden ver)
-router.get('/', productController.getAllProducts);
-router.get('/:id', productController.getProductById);
+router.get('/', getAllProducts);
+router.get('/:id', getProductById);
 
-// Solo ADMIN puede crear, actualizar, eliminar
-router.post('/', auth, adminOnly, productController.createProduct);
-router.put('/:id', auth, adminOnly, productController.updateProduct);
-router.delete('/:id', auth, adminOnly, productController.deleteProduct);
+router.post('/', auth, adminOnly, createProduct);
+router.put('/:id', auth, adminOnly, updateProduct);
+router.delete('/:id', auth, adminOnly, deleteProduct);
 
 export default router;
