@@ -1,6 +1,7 @@
 # Backend API Documentation - CryptoShop
 
 ## 📋 Overview
+
 Este documento describe todos los modelos de base de datos y endpoints API necesarios para el backend de CryptoShop.
 
 ---
@@ -8,6 +9,7 @@ Este documento describe todos los modelos de base de datos y endpoints API neces
 ## 🗄️ Database Models
 
 ### 1. **User Model**
+
 Almacena la información de los usuarios registrados.
 
 ```javascript
@@ -28,6 +30,7 @@ Almacena la información de los usuarios registrados.
 ```
 
 ### 2. **Product Model**
+
 Almacena los productos disponibles en la tienda.
 
 ```javascript
@@ -35,8 +38,8 @@ Almacena los productos disponibles en la tienda.
   _id: ObjectId,
   name: String (required),
   description: String,
-  category: String (required), // 'electronics', 'fashion', 'home', 'sports'
-  price: Number (required), // Precio en USDT
+  category: String (required),
+  price: Number (required),
   stock: Number (required, default: 0),
   image: String (URL de la imagen),
   color: String (optional),
@@ -49,12 +52,13 @@ Almacena los productos disponibles en la tienda.
 ```
 
 ### 3. **Order Model**
+
 Almacena las órdenes de compra.
 
 ```javascript
 {
   _id: ObjectId,
-  orderId: String (required, unique), // Formato: #TRX-94820
+  orderId: String (required, unique),
   userId: ObjectId (ref: 'User', required),
   products: [{
     productId: ObjectId (ref: 'Product', required),
@@ -64,20 +68,21 @@ Almacena las órdenes de compra.
     color: String
   }],
   subtotal: Number (required),
-  networkFee: Number (default: -1.20),
+  networkFee: Number (default: -0.01),
   discount: Number (default: 0),
   total: Number (required),
-  status: String (required), // 'pending', 'completed', 'failed', 'cancelled'
+  status: String (required),
   paymentMethod: String (default: 'TRC-20'),
-  transactionHash: String (optional), // Hash de la transacción en blockchain
-  walletAddress: String (required), // Dirección de wallet del comprador
-  merchantAddress: String (required), // Dirección de wallet del vendedor
+  transactionHash: String (optional),
+  walletAddress: String (required),
+  merchantAddress: String (required),
   createdAt: Date (default: Date.now),
   updatedAt: Date
 }
 ```
 
 ### 4. **Transaction Model**
+
 Almacena el historial de transacciones de wallet.
 
 ```javascript
@@ -85,14 +90,14 @@ Almacena el historial de transacciones de wallet.
   _id: ObjectId,
   userId: ObjectId (ref: 'User', required),
   orderId: ObjectId (ref: 'Order', optional),
-  type: String (required), // 'purchase', 'refund', 'deposit', 'withdrawal'
+  type: String (required),
   amount: Number (required),
-  currency: String (default: 'USDT'),
+  currency: String (default: 'TRX'),
   network: String (default: 'TRC-20'),
   transactionHash: String (optional),
   fromAddress: String,
   toAddress: String,
-  status: String (required), // 'pending', 'confirmed', 'failed'
+  status: String (required),
   confirmations: Number (default: 0),
   createdAt: Date (default: Date.now),
   updatedAt: Date
@@ -100,13 +105,14 @@ Almacena el historial de transacciones de wallet.
 ```
 
 ### 5. **Session Model**
+
 Almacena las sesiones activas de los usuarios.
 
 ```javascript
 {
   _id: ObjectId,
   userId: ObjectId (ref: 'User', required),
-  device: String, // 'Windows • Chrome', 'iOS • Safari'
+  device: String,
   ipAddress: String,
   userAgent: String,
   lastActive: Date (default: Date.now),
@@ -122,9 +128,11 @@ Almacena las sesiones activas de los usuarios.
 ### **Authentication Endpoints**
 
 #### POST `/api/auth/register`
+
 Registra un nuevo usuario.
 
 **Request Body:**
+
 ```json
 {
   "username": "johndoe",
@@ -134,6 +142,7 @@ Registra un nuevo usuario.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -150,9 +159,11 @@ Registra un nuevo usuario.
 ---
 
 #### POST `/api/auth/login`
+
 Inicia sesión de un usuario.
 
 **Request Body:**
+
 ```json
 {
   "email": "john@example.com",
@@ -161,6 +172,7 @@ Inicia sesión de un usuario.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -177,14 +189,17 @@ Inicia sesión de un usuario.
 ---
 
 #### POST `/api/auth/logout`
+
 Cierra la sesión del usuario.
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -197,14 +212,17 @@ Authorization: Bearer <token>
 ### **User Endpoints**
 
 #### GET `/api/users/profile`
+
 Obtiene el perfil del usuario autenticado.
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -223,14 +241,17 @@ Authorization: Bearer <token>
 ---
 
 #### PUT `/api/users/profile`
+
 Actualiza el perfil del usuario.
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Request Body:**
+
 ```json
 {
   "username": "johndoe_updated",
@@ -240,6 +261,7 @@ Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -251,14 +273,17 @@ Authorization: Bearer <token>
 ---
 
 #### PUT `/api/users/password`
+
 Cambia la contraseña del usuario.
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Request Body:**
+
 ```json
 {
   "currentPassword": "OldPassword123!",
@@ -267,6 +292,7 @@ Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -277,14 +303,17 @@ Authorization: Bearer <token>
 ---
 
 #### POST `/api/users/wallet/connect`
+
 Conecta una wallet TRC-20 al perfil del usuario.
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Request Body:**
+
 ```json
 {
   "walletAddress": "TLR3qG5yjpGKzW9x1B2n4Rr6S7T8U9vkK9zw4pXQv"
@@ -292,6 +321,7 @@ Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -305,18 +335,20 @@ Authorization: Bearer <token>
 ### **Wallet Endpoints**
 
 #### GET `/api/wallet/balance/:address`
+
 Obtiene el balance de una wallet TRC-20.
 
 **Params:**
+
 - `address`: Dirección de la wallet TRC-20
 
 **Response:**
+
 ```json
 {
   "success": true,
   "address": "TLR3qG5yjpGKzW9x1B2n4Rr6S7T8U9vkK9zw4pXQv",
-  "usdt": 1250.50,
-  "trx": 45.30,
+  "trx": 45.3,
   "network": "TRC-20"
 }
 ```
@@ -326,14 +358,17 @@ Obtiene el balance de una wallet TRC-20.
 ### **Product Endpoints**
 
 #### GET `/api/products`
+
 Obtiene todos los productos disponibles.
 
 **Query Params:**
+
 - `category` (optional): Filtra por categoría
 - `limit` (optional): Número de productos por página
 - `page` (optional): Número de página
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -342,7 +377,7 @@ Obtiene todos los productos disponibles.
       "_id": "...",
       "name": "Wireless Headphones Pro",
       "category": "electronics",
-      "price": 145.00,
+      "price": 0.5,
       "stock": 50,
       "image": "https://...",
       "color": "Midnight Black",
@@ -362,12 +397,15 @@ Obtiene todos los productos disponibles.
 ---
 
 #### GET `/api/products/:id`
+
 Obtiene un producto por su ID.
 
 **Params:**
+
 - `id`: ID del producto
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -376,7 +414,7 @@ Obtiene un producto por su ID.
     "name": "Wireless Headphones Pro",
     "description": "Premium wireless headphones...",
     "category": "electronics",
-    "price": 145.00,
+    "price": 0.5,
     "stock": 50,
     "image": "https://...",
     "color": "Midnight Black",
@@ -391,14 +429,17 @@ Obtiene un producto por su ID.
 ### **Order Endpoints**
 
 #### POST `/api/orders`
+
 Crea una nueva orden de compra.
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Request Body:**
+
 ```json
 {
   "products": [
@@ -412,6 +453,7 @@ Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -420,7 +462,7 @@ Authorization: Bearer <token>
     "_id": "...",
     "orderId": "#TRX-94821",
     "products": [...],
-    "total": 290.00,
+    "total": 1.5,
     "status": "pending",
     "merchantAddress": "TMerchantWalletAddress123...",
     "createdAt": "2024-02-12T19:00:00.000Z"
@@ -431,19 +473,23 @@ Authorization: Bearer <token>
 ---
 
 #### GET `/api/orders`
+
 Obtiene todas las órdenes del usuario autenticado.
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Query Params:**
+
 - `status` (optional): Filtra por estado ('pending', 'completed', 'failed', 'cancelled')
 - `limit` (optional): Número de órdenes por página
 - `page` (optional): Número de página
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -452,7 +498,7 @@ Authorization: Bearer <token>
       "_id": "...",
       "orderId": "#TRX-94820",
       "products": [...],
-      "total": 450.00,
+      "total": 2.25,
       "status": "completed",
       "createdAt": "2024-02-11T14:20:00.000Z"
     },
@@ -471,17 +517,21 @@ Authorization: Bearer <token>
 ---
 
 #### GET `/api/orders/:id`
+
 Obtiene los detalles de una orden específica.
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Params:**
+
 - `id`: ID de la orden
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -492,15 +542,15 @@ Authorization: Bearer <token>
       {
         "productId": "...",
         "name": "Wireless Headphones Pro",
-        "price": 145.00,
+        "price": 0.5,
         "quantity": 2,
         "color": "Midnight Black"
       }
     ],
-    "subtotal": 290.00,
-    "networkFee": -1.20,
+    "subtotal": 1.5,
+    "networkFee": -0.01,
     "discount": 0,
-    "total": 288.80,
+    "total": 1.49,
     "status": "completed",
     "transactionHash": "0x123abc...",
     "createdAt": "2024-02-11T14:20:00.000Z"
@@ -511,17 +561,21 @@ Authorization: Bearer <token>
 ---
 
 #### PATCH `/api/orders/:id/status`
+
 Actualiza el estado de una orden (solo admin o sistema de pago).
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Params:**
+
 - `id`: ID de la orden
 
 **Request Body:**
+
 ```json
 {
   "status": "completed",
@@ -530,6 +584,7 @@ Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -543,20 +598,24 @@ Authorization: Bearer <token>
 ### **Payment History Endpoints**
 
 #### GET `/api/transactions`
+
 Obtiene el historial de transacciones del usuario.
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Query Params:**
+
 - `type` (optional): Filtra por tipo ('purchase', 'refund', 'deposit', 'withdrawal')
 - `status` (optional): Filtra por estado ('pending', 'confirmed', 'failed')
 - `limit` (optional): Número de transacciones por página
 - `page` (optional): Número de página
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -564,8 +623,8 @@ Authorization: Bearer <token>
     {
       "_id": "...",
       "type": "purchase",
-      "amount": 288.80,
-      "currency": "USDT",
+      "amount": 1.49,
+      "currency": "TRX",
       "network": "TRC-20",
       "transactionHash": "0x123abc...",
       "status": "confirmed",
@@ -582,14 +641,17 @@ Authorization: Bearer <token>
 ### **Session Endpoints**
 
 #### GET `/api/sessions`
+
 Obtiene las sesiones activas del usuario.
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -610,17 +672,21 @@ Authorization: Bearer <token>
 ---
 
 #### DELETE `/api/sessions/:id`
+
 Cierra una sesión específica.
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Params:**
+
 - `id`: ID de la sesión
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -633,14 +699,17 @@ Authorization: Bearer <token>
 ## 🔐 Security Endpoints
 
 #### POST `/api/security/2fa/enable`
+
 Habilita la autenticación de dos factores.
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -653,14 +722,17 @@ Authorization: Bearer <token>
 ---
 
 #### POST `/api/security/2fa/verify`
+
 Verifica el código 2FA.
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Request Body:**
+
 ```json
 {
   "code": "123456"
@@ -668,6 +740,7 @@ Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -680,21 +753,27 @@ Authorization: Bearer <token>
 ## 📊 Admin Endpoints (Optional)
 
 #### GET `/api/admin/products`
+
 Obtiene todos los productos (incluidos inactivos).
 
 #### POST `/api/admin/products`
+
 Crea un nuevo producto.
 
 #### PUT `/api/admin/products/:id`
+
 Actualiza un producto.
 
 #### DELETE `/api/admin/products/:id`
+
 Elimina un producto.
 
 #### GET `/api/admin/orders`
+
 Obtiene todas las órdenes de todos los usuarios.
 
 #### GET `/api/admin/users`
+
 Obtiene todos los usuarios.
 
 ---
@@ -702,6 +781,7 @@ Obtiene todos los usuarios.
 ## 🚀 Notas de Implementación
 
 ### Tecnologías Recomendadas:
+
 - **Framework**: Node.js + Express.js
 - **Base de Datos**: MongoDB + Mongoose
 - **Autenticación**: JWT (jsonwebtoken)
@@ -710,6 +790,7 @@ Obtiene todos los usuarios.
 - **Validación**: express-validator o Joi
 
 ### Variables de Entorno Necesarias:
+
 ```env
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/cryptoshop
@@ -721,6 +802,7 @@ NODE_ENV=development
 ```
 
 ### Middleware Requerido:
+
 1. **authMiddleware**: Verifica el token JWT
 2. **errorHandler**: Maneja errores globalmente
 3. **validateRequest**: Valida los datos de entrada
@@ -731,17 +813,20 @@ NODE_ENV=development
 ## 📝 Prioridades de Implementación
 
 ### Fase 1 (Esencial):
+
 1. ✅ User Model + Auth Endpoints
 2. ✅ Product Model + Product Endpoints
 3. ✅ Order Model + Order Endpoints
 4. ✅ Wallet Balance Endpoint
 
 ### Fase 2 (Importante):
+
 5. ✅ Transaction Model + Transaction Endpoints
 6. ✅ Session Model + Session Endpoints
 7. ✅ Payment verification con blockchain
 
 ### Fase 3 (Opcional):
+
 8. ⚪ 2FA Implementation
 9. ⚪ Admin Panel Endpoints
 10. ⚪ Email notifications

@@ -167,7 +167,7 @@ curl -X POST http://localhost:3000/api/wallet/send-trx \
 1. Crear nueva colección
 2. En "Pre-request Script" global:
    ```javascript
-   // Esto permite guardar cookies automáticamente
+
    ```
 3. Importar endpoints desde `API_DOCUMENTATION.md`
 
@@ -229,10 +229,8 @@ MONGODB_URI=mongodb+srv://usuario:contraseña@cluster.mongodb.net/crypto-shop?re
 En `src/models/User.js`, encriptar `wallet.privateKey`:
 
 ```javascript
-// Importar crypto
 import crypto from "crypto";
 
-// En pre-save hook
 if (this.wallet?.privateKey) {
   const cipher = crypto.createCipher("aes-256-cbc", process.env.ENCRYPTION_KEY);
   this.wallet.privateKey = cipher.update(this.wallet.privateKey, "utf8", "hex");
