@@ -9,17 +9,17 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Invalid email']
   },
-  password: {
-    type: String,
-    required: [true, 'Password is required'],
-    minlength: 8,
-    select: false // No devolver la contraseña por defecto
-  },
   username: {
     type: String,
     required: [true, 'Username is required'],
     unique: true,
     minlength: 3
+  },
+  password: {
+    type: String,
+    required: [true, 'Password is required'],
+    minlength: 8,
+    select: false
   },
   role: {
     type: String,
@@ -28,7 +28,27 @@ const userSchema = new mongoose.Schema({
   },
   wallet: {
     address: String,
-    privateKey: String // ⚠️ Solo para desarrollo, considera encriptar en producción
+    privateKey: String
+  },
+  phone: {
+    type: String,
+    default: null
+  },
+  country: {
+    type: String,
+    default: null
+  },
+  recoveryEmail: {
+    type: String,
+    default: null
+  },
+  twoFactorEnabled: {
+    type: Boolean,
+    default: false
+  },
+  twoFactorSecret: {
+    type: String,
+    default: null
   },
   isActive: {
     type: Boolean,
@@ -45,7 +65,6 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// Hash password antes de guardar
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   
@@ -58,7 +77,6 @@ userSchema.pre('save', async function(next) {
   }
 });
 
-// Método para comparar contraseñas
 userSchema.methods.matchPassword = async function(enteredPassword) {
   return await bcryptjs.compare(enteredPassword, this.password);
 };
