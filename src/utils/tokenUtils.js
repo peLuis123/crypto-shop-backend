@@ -6,15 +6,15 @@ dotenv.config();
 const ACCESS_TOKEN_EXPIRY = '15m';
 const REFRESH_TOKEN_EXPIRY = '7d';
 
-export const generateTokens = (userId) => {
+export const generateTokens = (userId,role) => {
   const accessToken = jwt.sign(
-    { id: userId },
+    { id: userId, role: role },
     process.env.ACCESS_TOKEN_SECRET,
     { expiresIn: ACCESS_TOKEN_EXPIRY }
   );
 
   const refreshToken = jwt.sign(
-    { id: userId },
+    { id: userId, role: role },
     process.env.REFRESH_TOKEN_SECRET,
     { expiresIn: REFRESH_TOKEN_EXPIRY }
   );
