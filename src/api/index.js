@@ -15,6 +15,7 @@ import orderRoutes from "./orders/index.js";
 import transactionRoutes from "./transactions/index.js";
 import sessionRoutes from "./sessions/index.js";
 import securityRoutes from "./security/index.js";
+import adminRoutes from "./admin/index.js";
 
 const app = express();
 
@@ -48,6 +49,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/security", securityRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   swaggerOptions: {
