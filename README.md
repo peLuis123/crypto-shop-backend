@@ -1,290 +1,198 @@
-# 🚀 Crypto Shop Backend - Sistema de Autenticación Seguro
+# Crypto-Shop Backend
 
-Sistema de backend con autenticación JWT, gestión de wallets TRON y base de datos MongoDB.
+Proyecto: **Crypto-Shop**
+Desarrollado por: **Pedro Luis Ramos Calla**
 
-## 📋 Requisitos previos
+Backend de e-commerce con pagos en TRX (TRON), autenticacion JWT con cookies HttpOnly, ordenes, productos, usuarios y panel administrativo con estadisticas y operaciones en tiempo real.
+
+---
+
+## Resumen ejecutivo
+
+Crypto-Shop es un backend listo para produccion que soporta:
+
+- Autenticacion y autorizacion por roles (user/admin)
+- Pagos en TRX con confirmacion en blockchain
+- Ordenes y transacciones con estados consistentes
+- Panel admin con estadisticas, ventas, clientes y productos
+- Notificaciones en tiempo real via Socket.io
+
+---
+
+## Stack tecnico
+
+- Node.js + Express
+- MongoDB + Mongoose
+- TRON (TronWeb)
+- JWT (cookies HttpOnly)
+- Socket.io (notificaciones en tiempo real)
+- Swagger OpenAPI
+
+---
+
+## Arquitectura funcional
+
+1. El usuario crea una orden.
+2. El pago se envia a la wallet del merchant.
+3. La transaccion queda en estado `pending`.
+4. Un listener valida la confirmacion en blockchain.
+5. Se actualiza la orden a `completed`.
+6. Se notifica al frontend via socket.
+
+---
+
+## Requisitos
 
 - Node.js v16+
-- npm o yarn
 - MongoDB (local o Atlas)
-- TRON API Key (opcional, para límites más altos)
+- Acceso a red TRON (Nile/Testnet o Mainnet)
 
-## 🔧 Instalación
+---
 
-### 1. Clonar y instalar dependencias
+## Instalacion
 
 ```bash
-git clone <repo>
-cd crypto-shop-backend
 npm install
 ```
 
-### 2. Configurar variables de entorno
+---
 
-Copiar `.env.example` a `.env` y completar:
+## Variables de entorno
 
-```bash
-cp .env.example .env
-```
-
-En `.env`:
+Crea `.env`:
 
 ```
 MONGODB_URI=mongodb://localhost:27017/crypto-shop
 NODE_ENV=development
 PORT=3000
 TRON_NETWORK=https://nile.trongrid.io
-ACCESS_TOKEN_SECRET=tu_secret_super_largo_aqui_min_32_chars
-REFRESH_TOKEN_SECRET=otro_secret_super_largo_aqui_min_32_chars
+ACCESS_TOKEN_SECRET=tu_secret_largo_aqui
+REFRESH_TOKEN_SECRET=otro_secret_largo_aqui
 CLIENT_URL=http://localhost:3000
+FRONTEND_URL=http://localhost:5173
+MERCHANT_WALLET_ADDRESS=TU_WALLET_MERCHANT
 ```
 
-### 3. Iniciar MongoDB
+---
 
-**Local:**
-
-```bash
-mongod
-```
-
-**O usar MongoDB Atlas (cloud):**
-
-```
-MONGODB_URI=mongodb+srv://usuario:contraseña@cluster.mongodb.net/crypto-shop?retryWrites=true&w=majority
-```
-
-### 4. Ejecutar en desarrollo
+## Ejecutar
 
 ```bash
 npm run dev
 ```
 
-✅ Servidor corriendo en `http://localhost:3000`
+Servidor por defecto en: `http://localhost:3000`
 
 ---
 
-## 📚 Funcionalidades
+## Swagger
 
-### ✅ Autenticación
+Swagger disponible en:
 
-- Registro con wallet automática
-- Login seguro
-- Logout
-- Refresh token automático
-- Tokens en cookies HttpOnly
-
-### ✅ Autorizaciones
-
-- Roles: usuario y administrador
-- Middlewares de protección por rol
-- Rutas protegidas
-
-### ✅ Wallets
-
-- Crear wallet automáticamente en registro
-- Ver saldo TRX
-- Enviar TRX
-
-### ✅ Seguridad
-
-- Bcryptjs para contrase`ñas
-- JWT con expiry
-- Rate limiting
-- Helmet headers
-- CORS
-- Validación de entrada
-- HPP (HTTP Parameter Pollution protection)
+`/api/docs`
 
 ---
 
-## 🔐 Flujo de Seguridad
+## Funcionalidades principales
 
-```
-1. Usuario registra → Crear wallet TRON + hash password
-2. JWT tokens en cookies HttpOnly
-3. Refresh token a los 15 min automáticamente
-4. Rate limiting en login (5 intentos/15 min)
-5. Contrasenas hasheadas con bcryptjs (salt=10)
-6. Access denied si no está autenticado
-```
+### Autenticacion
+
+- Registro con wallet
+- Login / logout
+- Refresh token
+- Cookies HttpOnly
+
+### Ordenes y pagos
+
+- Crear orden
+- Pagar en TRX
+- Confirmacion asincrona
+- Prevencion de doble compra pendiente
+
+### Panel admin
+
+- Dashboard con metricas y tendencias
+- Ventas con filtros
+- Clientes con totalSpent
+- Productos (CRUD)
+- Reembolsos on-chain
+
+### Socket.io
+
+- Evento `transaction:confirmed` al confirmar pago
 
 ---
 
-## 📖 API Endpoints
+## Endpoints clave
 
-Ver [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
+### Auth
 
-**Resumen rápido:**
+- POST `/api/auth/register`
+- POST `/api/auth/login`
+- POST `/api/auth/logout`
+- POST `/api/auth/refresh-token`
 
-| Método | Ruta                      | Autenticadores | Descripción    |
-| ------ | ------------------------- | -------------- | -------------- |
-| POST   | `/api/auth/register`      | -              | Crear cuenta   |
-| POST   | `/api/auth/login`         | -              | Iniciar sesión |
-| POST   | `/api/auth/logout`        | ✅             | Cerrar sesión  |
-| GET    | `/api/auth/profile`       | ✅             | Ver perfil     |
-| POST   | `/api/auth/refresh-token` | -              | Renovar token  |
-| GET    | `/api/wallet/balance`     | ✅             | Ver saldo      |
-| POST   | `/api/wallet/send-trx`    | ✅             | Enviar TRX     |
+### Orders
+
+- POST `/api/orders`
+- POST `/api/orders/:id/pay`
+- GET `/api/orders`
+
+### Admin
+
+- GET `/api/admin/stats`
+- GET `/api/admin/sales`
+- PATCH `/api/admin/orders/:id/status`
+- POST `/api/admin/orders/:id/refund`
+- GET `/api/admin/customers`
+- PATCH `/api/admin/customers/:id/block`
+- POST `/api/admin/customers/export`
+- GET `/api/admin/products`
+- POST `/api/admin/products`
+- PATCH `/api/admin/products/:id`
+- DELETE `/api/admin/products/:id`
 
 ---
 
-## 🧪 Pruebas
+## Socket.io (frontend)
 
-### Con cURL
+El frontend debe conectarse y unirse al room del usuario:
 
-```bash
-# Registrar
-curl -X POST http://localhost:3000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "user@example.com",
-    "username": "username123",
-    "password": "password123",
-    "passwordConfirm": "password123"
-  }' \
-  -c cookies.txt
+```javascript
+socket.emit("join-user", userId);
 
-# Ver perfil (usa cookies guardadas)
-curl -X GET http://localhost:3000/api/auth/profile \
-  -b cookies.txt
-
-# Ver saldo
-curl -X GET http://localhost:3000/api/wallet/balance \
-  -b cookies.txt
-
-# Enviar TRX
-curl -X POST http://localhost:3000/api/wallet/send-trx \
-  -H "Content-Type: application/json" \
-  -b cookies.txt \
-  -d '{
-    "toAddress": "TAddress...",
-    "amount": 0.1
-  }'
+socket.on("transaction:confirmed", (data) => {
+  // data: { orderId, txHash, message, timestamp }
+});
 ```
 
-### Con Postman
+---
 
-1. Crear nueva colección
-2. En "Pre-request Script" global:
-   ```javascript
+## Estado de ordenes
 
-   ```
-3. Importar endpoints desde `API_DOCUMENTATION.md`
+- pending
+- completed
+- refunded
 
 ---
 
-## 📁 Estructura de carpetas
+## Estructura del proyecto
 
 ```
 src/
-├── api/
-│   ├── auth/              # Autenticación
-│   │   ├── authController.js
-│   │   └── index.js
-│   └── wallets/          # Wallets TRON
-│       ├── getBalances.js
-│       ├── walletController.js
-│       └── index.js
-├── config/
-│   └── database.js       # Conexión MongoDB
-├── middlewares/
-│   ├── auth.js           # JWT + roles
-│   └── validation.js     # Validación de entrada
-├── models/
-│   └── User.js           # Schema Mongoose
-├── services/
-│   └── tron.service.js   # Funciones TRON
-├── utils/
-│   └── tokenUtils.js     # JWT utilities
-├── index.js              # Entrada principal
-└── api/index.js          # Setup de Express
+  api/
+  config/
+  middlewares/
+  models/
+  services/
+  utils/
+  index.js
 ```
 
 ---
 
-## ⚙️ Configuración avanzada
+## Contacto
 
-### Cambiar a Mainnet
+Pedro Luis Ramos Calla
 
-En `.env`:
-
-```
-TRON_NETWORK=https://api.trongrid.io
-```
-
-⚠️ **CUIDADO CON DINERO REAL**
-
-### Usar MongoDB Atlas
-
-1. Crear cluster en [mongodb.com](https://mongodb.com)
-2. Copiar connection string
-3. En `.env`:
-
-```
-MONGODB_URI=mongodb+srv://usuario:contraseña@cluster.mongodb.net/crypto-shop?retryWrites=true&w=majority
-```
-
-### Encriptar Private Keys (Producción)
-
-En `src/models/User.js`, encriptar `wallet.privateKey`:
-
-```javascript
-import crypto from "crypto";
-
-if (this.wallet?.privateKey) {
-  const cipher = crypto.createCipher("aes-256-cbc", process.env.ENCRYPTION_KEY);
-  this.wallet.privateKey = cipher.update(this.wallet.privateKey, "utf8", "hex");
-  this.wallet.privateKey += cipher.final("hex");
-}
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Error: "MongoDB connection error"
-
-- Verificar MongoDB está corriendo: `mongod`
-- Verificar `MONGODB_URI` en `.env`
-
-### Error: "Token is invalid"
-
-- Limpiar cookies del navegador
-- Asegurar que `ACCESS_TOKEN_SECRET` es suficientemente largo
-
-### Error: "TRON address invalid"
-
-- Asegurar dinero está en testnet (Nile: https://nile.trongrid.io)
-- Verificar formato de dirección (debe ser base58 con `T`)
-
----
-
-## 📝 Notas de seguridad
-
-✅ **SIEMPRE EN PRODUCCIÓN:**
-
-- Usar HTTPS (no HTTP)
-- Usar variables de entorno seguros
-- Encriptar private keys en BD
-- Usar MongoDB con autenticación
-- Aumentar JWT secrets
-- Revisar CORS origins
-
-⚠️ **NO HAGAS ESTO EN PRODUCCIÓN:**
-
-- Guardar private keys sin encriptar
-- Exponerlas en console.log
-- Usar debug mode
-- Confiar en contraseños débiles
-
----
-
-## 📞 Soporte
-
-Para preguntas o issues, [create an issue](link-al-repo)
-
----
-
-## 📄 Licencia
-
-ISC
+Si necesitas soporte tecnico o detalles de implementacion, no dudes en contactarme.
