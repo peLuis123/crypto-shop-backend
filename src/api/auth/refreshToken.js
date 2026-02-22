@@ -20,7 +20,7 @@ export const refreshToken = async (req, res) => {
       return res.status(401).json({ error: 'Invalid refresh token' });
     }
 
-    const { accessToken, refreshToken: newRefreshToken } = generateTokens(decoded.id);
+    const { accessToken, refreshToken: newRefreshToken } = generateTokens(decoded.id, decoded.role);
 
     res.cookie('accessToken', accessToken, COOKIE_OPTIONS);
     res.cookie('refreshToken', newRefreshToken, { ...COOKIE_OPTIONS, maxAge: 7 * 24 * 60 * 60 * 1000 });
