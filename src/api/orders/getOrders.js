@@ -21,6 +21,7 @@ export const getOrders = async (req, res) => {
       total: await Order.countDocuments({ userId }),
       pending: await Order.countDocuments({ userId, status: 'pending' }),
       completed: await Order.countDocuments({ userId, status: 'completed' }),
+      refunded: await Order.countDocuments({ userId, status: 'refunded' }),
       failed: await Order.countDocuments({ userId, status: 'failed' }),
       cancelled: await Order.countDocuments({ userId, status: 'cancelled' })
     };

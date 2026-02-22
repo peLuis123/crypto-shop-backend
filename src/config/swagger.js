@@ -79,7 +79,7 @@ export const swaggerSpec = {
           networkFee: { type: 'number', example: -0.01 },
           discount: { type: 'number', example: 0 },
           total: { type: 'number', example: 1.49 },
-          status: { type: 'string', enum: ['pending', 'completed', 'failed', 'cancelled'] },
+          status: { type: 'string', enum: ['pending', 'completed', 'refunded', 'failed', 'cancelled'] },
           transactionHash: { type: 'string', example: '0x123abc...' },
           walletAddress: { type: 'string', example: 'TLR3qG5yjpGKzW9x1B2n4Rr6S7T8U9vkK9zw4pXQv' },
           merchantAddress: { type: 'string', example: 'TMerchantWalletAddress123...' },
@@ -786,7 +786,7 @@ export const swaggerSpec = {
                 type: 'object',
                 required: ['status'],
                 properties: {
-                  status: { type: 'string', enum: ['pending', 'completed', 'failed', 'cancelled'] },
+                  status: { type: 'string', enum: ['pending', 'completed', 'refunded'] },
                   transactionHash: { type: 'string' }
                 }
               }
@@ -959,6 +959,316 @@ export const swaggerSpec = {
                 }
               }
             }
+          }
+        }
+      }
+    },
+    '/api/admin/stats': {
+      get: {
+        tags: ['Admin'],
+        summary: 'Dashboard stats para admin',
+        security: [{ CookieAuth: [] }],
+        responses: {
+          200: {
+            description: 'Estadisticas del dashboard admin',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    stats: { type: 'object' },
+                    chartData: { type: 'array', items: { type: 'object' } },
+                    recentSales: { type: 'array', items: { $ref: '#/components/schemas/Order' } },
+                    topProducts: { type: 'array', items: { type: 'object' } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    '/api/admin/sales': {
+      get: {
+        tags: ['Admin'],
+        summary: 'Ventas para admin',
+        security: [{ CookieAuth: [] }],
+        parameters: [
+          { name: 'status', in: 'query', required: false, schema: { type: 'string' } },
+          { name: 'page', in: 'query', required: false, schema: { type: 'integer', example: 1 } },
+          { name: 'limit', in: 'query', required: false, schema: { type: 'integer', example: 10 } }
+        ],
+        responses: {
+          200: {
+            description: 'Lista paginada de ventas',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    sales: { type: 'array', items: { $ref: '#/components/schemas/Order' } },
+                    pagination: { type: 'object' }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    '/api/admin/orders/{id}/status': {
+      patch: {
+        tags: ['Admin'],
+        summary: 'Actualizar estado de orden (admin)',
+        security: [{ CookieAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['status'],
+                properties: {
+                  status: { type: 'string', enum: ['pending', 'completed', 'refunded'] },
+                  transactionHash: { type: 'string' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: 'Estado actualizado',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    message: { type: 'string', example: 'Order status updated' },
+                    order: { $ref: '#/components/schemas/Order' }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    '/api/admin/orders/{id}/refund': {
+      post: {
+        tags: ['Admin'],
+        summary: 'Reembolsar orden en blockchain',
+        security: [{ CookieAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          200: {
+            description: 'Reembolso enviado',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    message: { type: 'string', example: 'Refund sent. Waiting for blockchain confirmation.' },
+                    transaction: { $ref: '#/components/schemas/Transaction' }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    '/api/admin/users': {
+      get: {
+        tags: ['Admin'],
+        summary: 'Usuarios (admin)',
+        security: [{ CookieAuth: [] }],
+        parameters: [
+          { name: 'role', in: 'query', required: false, schema: { type: 'string' } },
+          { name: 'page', in: 'query', required: false, schema: { type: 'integer', example: 1 } },
+          { name: 'limit', in: 'query', required: false, schema: { type: 'integer', example: 10 } }
+        ],
+        responses: {
+          200: {
+            description: 'Lista de usuarios',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    users: { type: 'array', items: { $ref: '#/components/schemas/User' } },
+                    stats: { type: 'object' },
+                    pagination: { type: 'object' }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    '/api/admin/customers': {
+      get: {
+        tags: ['Admin'],
+        summary: 'Clientes con totalSpent',
+        security: [{ CookieAuth: [] }],
+        parameters: [
+          { name: 'search', in: 'query', required: false, schema: { type: 'string' } },
+          { name: 'page', in: 'query', required: false, schema: { type: 'integer', example: 1 } },
+          { name: 'limit', in: 'query', required: false, schema: { type: 'integer', example: 10 } }
+        ],
+        responses: {
+          200: {
+            description: 'Lista de clientes',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    users: { type: 'array', items: { $ref: '#/components/schemas/User' } },
+                    stats: { type: 'object' },
+                    pagination: { type: 'object' }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    '/api/admin/customers/{id}/block': {
+      patch: {
+        tags: ['Admin'],
+        summary: 'Bloquear o desbloquear cliente',
+        security: [{ CookieAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  isActive: { type: 'boolean', example: false }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: 'Cliente actualizado',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    message: { type: 'string', example: 'User blocked' },
+                    user: { type: 'object' }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    '/api/admin/customers/export': {
+      post: {
+        tags: ['Admin'],
+        summary: 'Exportar clientes en CSV',
+        security: [{ CookieAuth: [] }],
+        responses: {
+          200: {
+            description: 'CSV exportado'
+          }
+        }
+      }
+    },
+    '/api/admin/products': {
+      get: {
+        tags: ['Admin'],
+        summary: 'Lista de productos (admin)',
+        security: [{ CookieAuth: [] }],
+        parameters: [
+          { name: 'search', in: 'query', required: false, schema: { type: 'string' } },
+          { name: 'category', in: 'query', required: false, schema: { type: 'string', enum: ['digital', 'physical', 'service'] } },
+          { name: 'page', in: 'query', required: false, schema: { type: 'integer', example: 1 } },
+          { name: 'limit', in: 'query', required: false, schema: { type: 'integer', example: 10 } }
+        ],
+        responses: {
+          200: {
+            description: 'Lista de productos',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    products: { type: 'array', items: { $ref: '#/components/schemas/Product' } },
+                    pagination: { type: 'object' }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      post: {
+        tags: ['Admin'],
+        summary: 'Crear producto (admin)',
+        security: [{ CookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/Product' }
+            }
+          }
+        },
+        responses: {
+          201: {
+            description: 'Producto creado'
+          }
+        }
+      }
+    },
+    '/api/admin/products/{id}': {
+      patch: {
+        tags: ['Admin'],
+        summary: 'Actualizar producto (admin)',
+        security: [{ CookieAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/Product' }
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: 'Producto actualizado'
+          }
+        }
+      },
+      delete: {
+        tags: ['Admin'],
+        summary: 'Eliminar producto (admin)',
+        security: [{ CookieAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          200: {
+            description: 'Producto eliminado'
           }
         }
       }

@@ -49,6 +49,8 @@ export const register = async (req, res) => {
     res.cookie('accessToken', accessToken, COOKIE_OPTIONS);
     res.cookie('refreshToken', refreshToken, { ...COOKIE_OPTIONS, maxAge: 7 * 24 * 60 * 60 * 1000 });
 
+    const balance = await getBalance(user.wallet.address);
+
     res.status(201).json({
       message: 'User registered successfully',
       user: {
@@ -56,7 +58,10 @@ export const register = async (req, res) => {
         email: user.email,
         username: user.username,
         role: user.role,
-        wallet: user.wallet.address
+        wallet: {
+          address: user.wallet.address,
+          balance: balance
+        }
       }
     });
   } catch (error) {
