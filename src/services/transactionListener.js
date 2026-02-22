@@ -1,5 +1,6 @@
 import Transaction from '../models/Transaction.js';
 import Order from '../models/Order.js';
+import Product from '../models/Product.js';
 import pkg from 'tronweb';
 import dotenv from 'dotenv';
 import { emitTransactionConfirmed } from '../config/socket.js';
@@ -54,16 +55,40 @@ export const syncPendingTransactions = async () => {
 
           if (transaction.orderId) {
             const order = await Order.findById(transaction.orderId);
-            if (order && order.status === 'pending') {
-              order.status = 'completed';
-              order.updatedAt = Date.now();
-              await order.save();
+            if (order) {
+              if (transaction.type === 'purchase' && order.status === 'pending') {
+                order.status = 'completed';
+                order.updatedAt = Date.now();
+                await order.save();
 
-              emitTransactionConfirmed(
-                transaction.userId.toString(),
-                transaction.orderId.toString(),
-                transaction.transactionHash
-              );
+                // Descontar stock de los productos vendidos
+                for (const item of order.products) {
+                  await Product.findByIdAndUpdate(
+                    item.productId,
+                    { $inc: { stock: -item.quantity } }
+                  );
+                }
+
+                emitTransactionConfirmed(
+                  transaction.userId.toString(),
+                  transaction.orderId.toString(),
+                  transaction.transactionHash
+                );
+              }
+
+              if (transaction.type === 'refund' && order.status !== 'refunded') {
+                order.status = 'refunded';
+                order.updatedAt = Date.now();
+                await order.save();
+
+                // Restaurar stock de los productos refundados
+                for (const item of order.products) {
+                  await Product.findByIdAndUpdate(
+                    item.productId,
+                    { $inc: { stock: item.quantity } }
+                  );
+                }
+              }
             }
           }
         }
