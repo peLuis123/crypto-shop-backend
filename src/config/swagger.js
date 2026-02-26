@@ -14,7 +14,7 @@ export const swaggerSpec = {
       description: 'Development server'
     },
     {
-      url: 'https://api.cryptoshop.com',
+      url: 'https://crypto-shop-backend.vercel.app',
       description: 'Production server'
     }
   ],
